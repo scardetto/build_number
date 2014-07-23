@@ -1,6 +1,10 @@
-# BuildNumber
+# build_number
 
-TODO: Write a gem description
+Creates a `.build_number` file in your current directory which will store and increment the `BUILD_NUMBER`
+environment variable.  This is useful when you want to keep track of build numbers outside of a continuous integration
+environment.
+
+If the `BUILD_NUMBER` variable is already set, it will not be incremented.
 
 ## Installation
 
@@ -18,11 +22,18 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+In your project's Rakefile:
+
+```ruby
+require 'build_number'
+BuildNumber.set_env
+
+# ENV['BUILD_NUMBER'] is now set and incremented for the next build!
+```
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/build_number/fork )
+1. Fork it ( https://github.com/scardetto/build_number/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
