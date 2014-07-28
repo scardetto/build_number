@@ -36,6 +36,11 @@ describe BuildNumber do
     }.to raise_error
   end
 
+  it "should set the 'BUILD_NUMBER' env var" do
+    BuildNumber.set_env @tmp_dir
+    ENV.include?('BUILD_NUMBER').should be_true
+  end
+
   it "should not create a .build_number file if the 'BUILD_NUMBER' env var is already set" do
     ENV['BUILD_NUMBER'] = random_build_number.to_s
     BuildNumber.set_env @tmp_dir

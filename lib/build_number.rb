@@ -4,7 +4,7 @@ module BuildNumber
   FILE_NAME = '.build_number'
 
   def self.set_env(dir=nil)
-    ENV['BUILD_NUMBER'] = ENV['BUILD_NUMBER'] || increment(dir)
+    ENV['BUILD_NUMBER'] = ENV['BUILD_NUMBER'] || increment(dir).to_s
   end
 
   def self.increment(dir=nil)
