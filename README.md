@@ -28,7 +28,23 @@ In your project's Rakefile:
 require 'build_number'
 BuildNumber.set_env
 
-# ENV['BUILD_NUMBER'] is now set and incremented for the next build!
+# ENV['BUILD_NUMBER'] is now set and incremented for the next build.
+```
+
+Alternatively, you can get the value directly.  In either case, the value will be incremented only
+once per build.
+
+```ruby
+build_number = BuildNumber.current  # Reads the build number and increments the
+                                    # value for the next build. Subsequent
+                                    # calls return the same value.
+```
+
+You can also customize the name of the environment variable.
+
+```ruby
+BuildNumber.env_var_name = 'A_CUSTOM_ENV_VAR_NAME'
+BuildNumber.set_env
 ```
 
 ## Contributing
