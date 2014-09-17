@@ -2,55 +2,104 @@ require 'tmpdir'
 require 'build_number'
 
 describe BuildNumber do
-  before :each do
-    @tmp_dir = Dir.mktmpdir
-  end
+  BUILD_NUMBER = 'BUILD_NUMBER'
+
+  let(:tmp_dir) { Dir.mktmpdir }
+  let(:build_number) { Random.new.rand(100) }
+  let(:build_number_path) { "#{tmp_dir}/.build_number" }
 
   after :each do
-    FileUtils.remove_entry_secure @tmp_dir
+    FileUtils.remove_entry_secure tmp_dir
+    ENV.delete(BUILD_NUMBER)
   end
 
-  it 'should create a .build_number file when none exists' do
-    path = BuildNumber.find_or_create_file @tmp_dir
-    path.should eq("#{@tmp_dir}/.build_number")
+  it 'should set the env var' do
+    BuildNumber.set_env tmp_dir
+    ENV.include?(BUILD_NUMBER).should be_true
   end
 
-  it 'should find the .build_number file in parent directory' do
-    path = BuildNumber.find_or_create_file @tmp_dir
+  it 'should return same build number' do
+    current1 = BuildNumber.current tmp_dir
+    current2 = BuildNumber.current tmp_dir
 
-    nested_dir = "#{File.dirname(path)}/deeply/nested/path"
-    FileUtils.mkdir_p nested_dir
-    BuildNumber.find_or_create_file(nested_dir).should eq(path)
+    current1.should eq(current2)
   end
 
-  it 'should save and load build number' do
-    build_number = random_build_number
-    path = BuildNumber.find_or_create_file @tmp_dir
-    BuildNumber.save path, build_number
-    BuildNumber.read(path).should eq(build_number)
+  describe 'when looking for the .build_number file' do
+    let(:path) { BuildNumber.find_or_create_file tmp_dir }
+
+    it 'should have the right name' do
+      path.should eq(build_number_path)
+    end
+
+    it 'should be created when it does not exist' do
+      File.exists?(path).should be_true
+    end
+
+    it 'should look in parent directories' do
+      nested_dir = "#{File.dirname(path)}/deeply/nested/path"
+      FileUtils.mkdir_p nested_dir
+
+      BuildNumber.find_or_create_file(nested_dir).should eq(path)
+    end
+
+    it 'should raise when the provided directory does not exist' do
+      expect {
+        BuildNumber.find_or_create_file '/i/hopefully/dont/exist'
+      }.to raise_error
+    end
   end
 
-  it 'should raise when directory does not exist' do
-    expect {
-      BuildNumber.find_or_create_file '/i/hopefully/dont/exist'
-    }.to raise_error
+  describe 'when the .build_number file exists' do
+    let(:path) { BuildNumber.find_or_create_file tmp_dir }
+
+    before :each do
+      BuildNumber.save path, build_number
+    end
+
+    it 'should read build number' do
+      BuildNumber.read(path).should eq(build_number)
+    end
+
+    it 'should read and increment the current build number' do
+      BuildNumber.current(tmp_dir).should eq(build_number.to_s)
+      BuildNumber.read(path).should eq(build_number + 1)
+    end
   end
 
-  it "should set the 'BUILD_NUMBER' env var" do
-    BuildNumber.set_env @tmp_dir
-    ENV.include?('BUILD_NUMBER').should be_true
+  describe 'when using a custom env var name' do
+    CUSTOM_BUILD_NUMBER = 'CUSTOM_BUILD_NUM'
+
+    before :all do
+      BuildNumber.env_var_name = CUSTOM_BUILD_NUMBER
+    end
+
+    after :all do
+      BuildNumber.env_var_name = BuildNumber::DEFAULT_ENV_VAR_NAME
+    end
+
+    after :each do
+      ENV.delete(CUSTOM_BUILD_NUMBER)
+    end
+
+    it 'should set a custom env var' do
+      BuildNumber.set_env tmp_dir
+      ENV.include?(CUSTOM_BUILD_NUMBER).should be_true
+    end
   end
 
-  it "should not create a .build_number file if the 'BUILD_NUMBER' env var is already set" do
-    ENV['BUILD_NUMBER'] = random_build_number.to_s
-    BuildNumber.set_env @tmp_dir
+  describe 'when the env var is externally set' do
+    before :each do
+      ENV[BUILD_NUMBER] = build_number.to_s
+    end
 
-    File.exists?("#{@tmp_dir}/.build_number").should be_false
-    ENV['BUILD_NUMBER'] = nil
-  end
+    it 'should not create a .build_number file' do
+      BuildNumber.set_env tmp_dir
+      File.exists?(build_number_path).should be_false
+    end
 
-  def random_build_number
-    rng = Random.new
-    rng.rand(100)
+    it 'should not increment the value' do
+      BuildNumber.current(tmp_dir).should eq(ENV[BUILD_NUMBER])
+    end
   end
 end
