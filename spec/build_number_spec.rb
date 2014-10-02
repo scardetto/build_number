@@ -65,6 +65,12 @@ describe BuildNumber do
       BuildNumber.current(tmp_dir).should eq(build_number.to_s)
       BuildNumber.read(path).should eq(build_number + 1)
     end
+
+    it 'should read but not increment the number when calling next' do
+      next_build_number = BuildNumber.next tmp_dir
+      build_number.should eq(next_build_number)
+      BuildNumber.read(path).should eq(next_build_number)
+    end
   end
 
   describe 'when using a custom env var name' do
