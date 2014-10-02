@@ -15,6 +15,12 @@ module BuildNumber
     ENV[env_var_name]
   end
 
+  # Returns the next build number without incrementing it.
+  def self.next(dir=nil)
+    file = find_or_create_file dir
+    @next ||= read(file)
+  end
+
   # Reads and increments the value in the storage file. Returns the
   # current build number.
   def self.increment(dir=nil)
