@@ -47,6 +47,12 @@ BuildNumber.env_var_name = 'A_CUSTOM_ENV_VAR_NAME'
 BuildNumber.set_env
 ```
 
+If you want to read the next value of the build number without incrementing it, use the `next` method.
+
+```ruby
+next_build_number = BuildNumber.next
+```
+
 ## Contributing
 
 1. Fork it ( https://github.com/scardetto/build_number/fork )
